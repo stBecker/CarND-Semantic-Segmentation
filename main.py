@@ -79,13 +79,13 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     conv4 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1)
     conv7 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1)
 
-    decoder1 = tf.layers.conv2d_transpose(conv7, num_classes, 4, strides=(2, 2))
+    decoder1 = tf.layers.conv2d_transpose(conv7, num_classes, 4, strides=(2, 2), padding="same")
     decoder1 = tf.add(decoder1, conv4)
 
-    decoder2 = tf.layers.conv2d_transpose(decoder1, num_classes, 4, strides=(2, 2))
+    decoder2 = tf.layers.conv2d_transpose(decoder1, num_classes, 4, strides=(2, 2), padding="same")
     decoder2 = tf.add(decoder2, conv3)
 
-    decoder3 = tf.layers.conv2d_transpose(decoder2, num_classes, 16, strides=(8, 8))
+    decoder3 = tf.layers.conv2d_transpose(decoder2, num_classes, 16, strides=(8, 8), padding="same")
 
     return decoder3
 
@@ -137,6 +137,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
             loss, _ = sess.run([cross_entropy_loss, train_op],
                                feed_dict=feed_dict)
             losses.append(loss)
+            print(loss)
 
         print(f"Epoch {i} training loss: {sum(losses)/len(losses)}")
 
