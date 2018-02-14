@@ -143,7 +143,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         training_loss = sum(losses)/len(losses)
         print(f"Epoch {i} training loss: {training_loss}")
         if saver and i > 0 and i % 5 == 0:
-            save_path = saver.save(sess, f"model_{MODEL_NAME}_{i}_{training_loss}.ckpt")
+            save_path = saver.save(sess, f"models/model_{MODEL_NAME}_{i}_{training_loss}.ckpt")
             print("Model saved in path: %s" % save_path)
 
 
@@ -151,7 +151,7 @@ def run():
     num_classes = 2
     image_shape = (160, 576)
     epochs = 30
-    batch_size = 128
+    batch_size = 8
 
     correct_label = tf.placeholder(tf.float32, [None, image_shape[0], image_shape[1], num_classes])
     learning_rate = tf.placeholder(tf.float32)
@@ -168,10 +168,8 @@ def run():
     #  https://www.cityscapes-dataset.com/
 
     config = tf.ConfigProto(log_device_placement=False)
-    config.gpu_options.allow_growth = True
-    config.gpu_options.per_process_gpu_memory_fraction = 0.4
-
-    saver = tf.train.Saver()
+    # config.gpu_options.allow_growth = True
+    # config.gpu_options.per_process_gpu_memory_fraction = 0.4
 
     with tf.Session(config=config) as sess:
         # Path to vgg model
@@ -191,6 +189,7 @@ def run():
         # Initialize all variables
         sess.run(tf.global_variables_initializer())
         sess.run(tf.local_variables_initializer())
+        saver = tf.train.Saver()
 
         train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
                  correct_label, keep_prob, learning_rate, saver=saver)

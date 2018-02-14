@@ -6,6 +6,10 @@ __pycache__/
 .idea
 data/*
 
+runs/*
+
+models/*
+
 # C extensions
 *.so
 
