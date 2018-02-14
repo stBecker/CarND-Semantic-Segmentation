@@ -9,6 +9,7 @@ from sklearn.utils import shuffle
 
 LEARNING_RATE = 0.0001
 DROPOUT = 0.75
+MODEL_NAME = "seg1"
 
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -110,7 +111,7 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
 
 
 def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
-             correct_label, keep_prob, learning_rate):
+             correct_label, keep_prob, learning_rate, saver=None):
     """
     Train neural network and print out the loss during training.
     :param sess: TF Session
@@ -139,14 +140,18 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
             losses.append(loss)
             print(loss)
 
-        print(f"Epoch {i} training loss: {sum(losses)/len(losses)}")
+        training_loss = sum(losses)/len(losses)
+        print(f"Epoch {i} training loss: {training_loss}")
+        if saver and i > 0 and i % 5 == 0:
+            save_path = saver.save(sess, f"model_{MODEL_NAME}_{i}_{training_loss}.ckpt")
+            print("Model saved in path: %s" % save_path)
 
 
 def run():
     num_classes = 2
     image_shape = (160, 576)
-    epochs = 3
-    batch_size = 4
+    epochs = 30
+    batch_size = 128
 
     correct_label = tf.placeholder(tf.float32, [None, image_shape[0], image_shape[1], num_classes])
     learning_rate = tf.placeholder(tf.float32)
@@ -165,6 +170,8 @@ def run():
     config = tf.ConfigProto(log_device_placement=False)
     config.gpu_options.allow_growth = True
     config.gpu_options.per_process_gpu_memory_fraction = 0.4
+
+    saver = tf.train.Saver()
 
     with tf.Session(config=config) as sess:
         # Path to vgg model
@@ -186,7 +193,7 @@ def run():
         sess.run(tf.local_variables_initializer())
 
         train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
-                 correct_label, keep_prob, learning_rate)
+                 correct_label, keep_prob, learning_rate, saver=saver)
 
         # TODO: Save inference data using helper.save_inference_samples
         helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
